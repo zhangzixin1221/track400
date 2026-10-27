@@ -113,7 +113,7 @@ track400 --gpx-out runs/route.gpx              # 额外产出 GPX（可喂 simul
 
 ## 6. 真机前置条件
 
-1. **Apple 驱动**：`Apple Mobile Device Service` 正在运行，设备管理器里 `Apple Mobile Device USB Device` 正常。
+1. **Apple 驱动**：`Apple Mobile Device Service` 正在运行，设备管理器里 `Apple Mobile Device USB Device` 正常。若它是 `Stopped`（本机常见，启动类型为「手动」），双击 `fix-usbmuxd.bat` 修复。
 2. **信任此电脑**：`C:\ProgramData\Apple\Lockdown` 下有该机的 pairing record。
 3. **开发者模式**：设置 → 隐私与安全性 → 开发者模式 = 开（iOS 17+ 重启后需先解锁一次）。
 4. **开发者镜像（DDI）已挂载**：本项目启动时会探测 RSD 服务 `com.apple.instruments.dtservicehub`，缺失才尝试自动挂载。
