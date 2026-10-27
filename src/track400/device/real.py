@@ -36,6 +36,47 @@ from .base import DeviceInfo, DeviceSample, IDevice
 DDI_SERVICE = "com.apple.instruments.dtservicehub"
 
 
+def _exc_chain(exc: BaseException | None) -> list[str]:
+    """把异常链压成 ``Name(msg) ← Name(msg)`` 形式，空消息的异常也能看清类型。"""
+    out: list[str] = []
+    seen: set[int] = set()
+    cur: BaseException | None = exc
+    while cur is not None and id(cur) not in seen:
+        seen.add(id(cur))
+        name = type(cur).__name__
+        msg = str(cur).strip()
+        out.append(f"{name}({msg})" if msg else name)
+        cur = cur.__cause__ or cur.__context__
+    return out
+
+
+def _format_exc(exc: BaseException) -> str:
+    return " ← ".join(_exc_chain(exc))
+
+
+# usbmuxd（Apple Mobile Device Service）没跑起来时的特征
+_USBMUXD_MARKERS = ("usbmuxd", "usbmuxd", "connectionfailedtousbmuxd", "winerror 1225")
+
+
+def _connect_hint(exc: BaseException) -> str:
+    """连接失败时给出可执行的修复命令，而不是泛泛的四条检查。"""
+    chain = " ".join(_exc_chain(exc)).lower()
+    if any(marker in chain for marker in _USBMUXD_MARKERS):
+        return (
+            "usbmuxd 没在运行 —— 也就是 Windows 侧的「Apple Mobile Device Service」被停了，"
+            "电脑根本看不到 iPhone（跟数据线、信任无关）。\n"
+            "  用【管理员】PowerShell 执行：\n"
+            "      Set-Service 'Apple Mobile Device Service' -StartupType Automatic\n"
+            "      Start-Service 'Apple Mobile Device Service'\n"
+            "  不想开管理员窗口：打开一次「Apple Devices / Apple 设备」应用，它会把服务拉起来。\n"
+            "  服务起来后重跑本命令；仍失败再查数据线 / 「信任此电脑」/ 开发者模式。"
+        )
+    return (
+        "检查：① 数据线是否支持数据传输；② 手机是否已「信任此电脑」；"
+        "③ 设置→隐私与安全性→开发者模式是否开启；④ Apple Mobile Device Service 是否在运行"
+    )
+
+
 class RealDevice(IDevice):
     """通过 pymobiledevice3 的 DVT 通道注入位置。"""
 
@@ -60,11 +101,8 @@ class RealDevice(IDevice):
             lockdown = await create_using_usbmux(serial=self.udid, autopair=self._autopair)
         except Exception as exc:
             raise DeviceError(
-                f"无法连接设备: {exc}",
-                hint=(
-                    "检查：① 数据线是否支持数据传输；② 手机是否已「信任此电脑」；"
-                    "③ 设置→隐私与安全性→开发者模式是否开启；④ Apple Mobile Device Service 是否在运行"
-                ),
+                f"无法连接设备: {_format_exc(exc)}",
+                hint=_connect_hint(exc),
             ) from exc
 
         try:
@@ -94,7 +132,7 @@ class RealDevice(IDevice):
         except Exception as exc:
             await self._close_tunnel()
             raise DeviceError(
-                f"RSD 隧道建立失败: {exc}",
+                f"RSD 隧道建立失败: {_format_exc(exc)}",
                 hint=(
                     "① 先解锁手机一次（iOS 17+ 重启后需解锁才提供开发者服务）；"
                     "② 确认同一进程没有别的隧道在跑（userspace 隧道是单例）；"
