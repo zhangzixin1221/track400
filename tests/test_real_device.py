@@ -88,3 +88,23 @@ def test_clear_counts_and_close_releases() -> None:
     assert dev._ls is None
     # 幂等：再关一次不应抛
     asyncio.run(dev.close())
+
+
+def test_connect_hint_names_usbmuxd_repair() -> None:
+    """Apple Mobile Device Service 停了时，提示必须给出可直接执行的修复方式。"""
+    exc_mod = pytest.importorskip("pymobiledevice3.exceptions")
+    from track400.device.real import _connect_hint
+
+    hint = _connect_hint(exc_mod.ConnectionFailedToUsbmuxdError())
+    assert "usbmuxd" in hint
+    assert "fix-usbmuxd.bat" in hint
+    assert "Start-Service" in hint
+
+
+def test_connect_hint_falls_back_to_generic_checks() -> None:
+    from track400.device.real import _connect_hint
+
+    hint = _connect_hint(RuntimeError("boom"))
+    assert "信任" in hint
+    assert "开发者模式" in hint
+

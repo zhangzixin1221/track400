@@ -38,6 +38,7 @@ track400 --version
 
 | 现象 | 典型报错 | 原因 | 处置 |
 |---|---|---|---|
+| **报 `Failed to connect to usbmuxd socket`** | `ConnectionFailedToUsbmuxdError`（消息为空，旧版只显示「无法连接设备：」） | **Apple Mobile Device Service 被停了**（本机启动类型是「手动」）。此时电脑根本看不到手机，跟数据线/信任无关 | 双击项目根目录的 **`fix-usbmuxd.bat`**（弹 UAC 点「是」），它会启动服务并设为自动；或管理员 PowerShell：`Set-Service 'Apple Mobile Device Service' -StartupType Automatic; Start-Service 'Apple Mobile Device Service'` |
 | `usbmux list` 返回 `[]` | — | 线是“只充电”线；USB 口故障；`Apple Mobile Device Service` 没跑 | 换数据线/换口；`Get-Service "Apple Mobile Device Service"` 应为 Running；必要时重装 Apple Mobile Device Support |
 | 报设备未连接 | `NoDeviceConnectedError` / `Device is not connected` | 手机锁屏未信任；配对记录丢失 | 解锁手机，点“信任”；`pymobiledevice3 lockdown pair` |
 | 弹出信任框但一直不点 | 命令挂起 | 手机端等待确认 | 在手机上点“信任”，输入锁屏密码 |

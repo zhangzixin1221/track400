@@ -65,7 +65,8 @@ def _connect_hint(exc: BaseException) -> str:
         return (
             "usbmuxd 没在运行 —— 也就是 Windows 侧的「Apple Mobile Device Service」被停了，"
             "电脑根本看不到 iPhone（跟数据线、信任无关）。\n"
-            "  用【管理员】PowerShell 执行：\n"
+            "  最省事：双击项目根目录的 fix-usbmuxd.bat（会弹 UAC，点「是」）。\n"
+            "  或【管理员】PowerShell 执行：\n"
             "      Set-Service 'Apple Mobile Device Service' -StartupType Automatic\n"
             "      Start-Service 'Apple Mobile Device Service'\n"
             "  不想开管理员窗口：打开一次「Apple Devices / Apple 设备」应用，它会把服务拉起来。\n"

@@ -100,6 +100,16 @@ pymobiledevice3 usbmux list
 Get-Service "Apple Mobile Device Service"    # 应为 Running
 ```
 
+**如果这里是 `Stopped`**（本机常见：它的启动类型是「手动」），电脑会完全看不到手机，
+报错是 `Failed to connect to usbmuxd socket`。修法：
+
+- 双击项目根目录的 **`fix-usbmuxd.bat`**，UAC 点「是」；
+- 或管理员 PowerShell 执行：
+  ```powershell
+  Set-Service 'Apple Mobile Device Service' -StartupType Automatic
+  Start-Service 'Apple Mobile Device Service'
+  ```
+
 ### 4.2 手机已信任这台电脑
 
 ```powershell
